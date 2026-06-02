@@ -9,7 +9,23 @@
 <meta name="theme-color" content="#FFF5EE">
 <meta name="description" content="晟梁的AI分身，陪妈妈聊天">
 <link rel="manifest" href="/mom-chat/manifest.json">
-<title>暖灯 · 晟梁AI</title>
+<script>
+(function(){
+  var cur='v4';
+  if(localStorage.getItem('_sw_v')!==cur){
+    localStorage.setItem('_sw_v',cur);
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(rs){
+        rs.forEach(function(r){r.unregister()});
+        return caches.keys();
+      }).then(function(ks){
+        return Promise.all(ks.map(function(k){return caches.delete(k)}));
+      }).then(function(){location.reload(true)});
+    } else {location.reload(true)}
+  }
+})();
+</script>
+<style><title>暖灯 · 晟梁AI</title>
 <style>
 :root {
   --bg: #FFF5EE;
@@ -408,7 +424,7 @@ footer{
 // 暖灯 · 晟梁AI — 给妈妈的AI分身
 // ═══════════════════════════════════════════
 
-const APP_VERSION = 'v3'; // bump to force localStorage + SW refresh
+const APP_VERSION = 'v4'; // bump to force localStorage + SW refresh
 
 // ── Lock Screen ──
 const LOCK_PASSWORD = '1222';
