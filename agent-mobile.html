@@ -371,7 +371,7 @@ footer{
 <!-- Input -->
 <footer>
   <div class="input-wrap">
-    <textarea id="msgInput" rows="1" placeholder="跟妈说点什么..." maxlength="4000"></textarea>
+    <textarea id="msgInput" rows="1" placeholder="跟晟梁说点什么..." maxlength="4000"></textarea>
     <button class="mic-btn" id="btnMic" title="语音输入">🎤</button>
     <button class="stop-btn" id="btnStop" title="停止回复">■</button>
     <button class="send-btn" id="btnSend" disabled aria-label="发送">↑</button>
@@ -917,7 +917,7 @@ function stopRecording() {
   isRecording = false;
   btnMic.classList.remove('recording');
   btnMic.textContent = '🎤';
-  msgInput.placeholder = '跟妈说点什么...';
+  msgInput.placeholder = '跟晟梁说点什么...';
 }
 
 btnMic.addEventListener('click', () => {
