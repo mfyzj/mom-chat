@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="晟梁AI">
 <meta name="theme-color" content="#FFF5EE">
 <meta name="description" content="晟梁的AI分身，陪妈妈聊天">
+<link rel="manifest" href="/mom-chat/manifest.json">
 <title>暖灯 · 晟梁AI</title>
 <style>
 :root {
@@ -923,5 +924,7 @@ btnMic.addEventListener('click', () => {
 init();
 msgInput.focus();
 </script>
+<!-- Service Worker -->
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/mom-chat/sw.js');}</script>
 </body>
 </html>
