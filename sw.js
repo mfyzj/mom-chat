@@ -1,4 +1,4 @@
-const CACHE = 'nuandeng-v1';
+const CACHE = 'nuandeng-v2';
 const URLS = ['/mom-chat/', '/mom-chat/index.html', '/mom-chat/manifest.json'];
 
 self.addEventListener('install', e => {

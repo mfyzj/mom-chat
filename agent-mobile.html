@@ -407,6 +407,8 @@ footer{
 // 暖灯 · 晟梁AI — 给妈妈的AI分身
 // ═══════════════════════════════════════════
 
+const APP_VERSION = 'v2';
+
 // ── Lock Screen ──
 const LOCK_PASSWORD = '1222';
 const LOCK_KEY = 'agent_mobile_unlocked';
@@ -511,6 +513,12 @@ const cfgJsonbinId = document.getElementById('cfgJsonbinId');
 
 // ── Init ──
 function loadConfig(){
+  const ver = localStorage.getItem('agent_mobile_ver');
+  if(ver !== APP_VERSION){
+    localStorage.removeItem('agent_mobile_config');
+    localStorage.removeItem('agent_mobile_chats');
+    localStorage.setItem('agent_mobile_ver', APP_VERSION);
+  }
   const stored = localStorage.getItem('agent_mobile_config');
   if(stored) config = {...DEFAULTS, ...JSON.parse(stored)};
   else config = {...DEFAULTS};
