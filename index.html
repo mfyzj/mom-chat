@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="晟梁AI">
+<meta name="theme-color" content="#FFF5EE">
+<meta name="description" content="晟梁的AI分身，陪妈妈聊天">
+<title>暖灯 · 晟梁AI</title>
+<style>
+:root {
+  --bg: #FFF5EE;
+  --card: #FFFFFF;
+  --user-bubble: #FFE8D6;
+  --ai-bubble: #FFFFFF;
+  --accent: #D4784C;
+  --accent-soft: #F0C8A8;
+  --text: #3D2C2C;
+  --text-soft: #8B6F6F;
+  --text-light: #B8A0A0;
+  --border: #EDE0D4;
+  --shadow: 0 2px 12px rgba(61,44,44,0.06);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font-size: 17px;
+  --font-size-sm: 14px;
+  --font-size-xs: 12px;
+  --safe-bottom: env(safe-area-inset-bottom, 12px);
+  --header-h: 56px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{
+  font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif;
+  font-size: var(--font-size);
+  color: var(--text);
+  background: var(--bg);
+  display:flex;flex-direction:column;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Header ── */
+header{
+  height: var(--header-h);
+  background: linear-gradient(135deg, #FFF5EE 0%, #FFE8D6 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+header .title-group{display:flex;align-items:center;gap:10px}
+header .avatar{
+  width: 36px;height: 36px;border-radius: 50%;
+  background: linear-gradient(135deg, #E8A87C, #D4784C);
+  display:flex;align-items:center;justify-content:center;
+  color: #fff;font-size: 18px;font-weight: 600;
+  flex-shrink: 0;
+}
+header h1{font-size:17px;font-weight:600;color:var(--text);letter-spacing:.3px}
+header .subtitle{font-size:11px;color:var(--text-soft);margin-top:1px}
+header .actions{display:flex;gap:4px}
+header .actions button{
+  width: 34px;height: 34px;border-radius: 50%;border: none;
+  background: rgba(212,120,76,0.08);color: var(--accent);
+  font-size: 16px;cursor: pointer;display:flex;align-items:center;justify-content:center;
+  transition: background .2s;
+}
+header .actions button:active{background: rgba(212,120,76,0.2)}
+
+/* ── Messages ── */
+main{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding: 12px 12px 4px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+main::-webkit-scrollbar{width:3px}
+main::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.welcome{
+  text-align:center;padding: 40px 20px 30px;
+  animation: fadeInUp .6s ease;
+}
+.welcome .icon{
+  font-size: 52px;margin-bottom: 12px;display:block;
+  animation: pulse 2s ease-in-out infinite;
+}
+.welcome h2{font-size:20px;font-weight:600;color:var(--text);margin-bottom:6px}
+.welcome p{font-size:14px;color:var(--text-soft);line-height:1.6}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+.msg-row{display:flex;margin-bottom: 14px;animation: fadeInUp .35s ease}
+.msg-row.user{justify-content:flex-end}
+.msg-row.ai{justify-content:flex-start}
+.msg-bubble{
+  max-width:82%;padding: 11px 15px;border-radius: var(--radius);
+  font-size: var(--font-size);line-height:1.6;
+  word-break: break-word;
+  position: relative;
+}
+.msg-row.user .msg-bubble{
+  background: var(--user-bubble);
+  border-bottom-right-radius: 6px;
+}
+.msg-row.ai .msg-bubble{
+  background: var(--ai-bubble);
+  border-bottom-left-radius: 6px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+.msg-time{
+  font-size: var(--font-size-xs);
+  color: var(--text-light);
+  margin: 2px 4px 0;
+  text-align: center;
+}
+.msg-row.user .msg-time{text-align:right;margin-right:6px}
+.msg-row.ai .msg-time{text-align:left;margin-left:6px}
+
+/* Markdown in bubble */
+.msg-bubble p{margin:0 0 6px}
+.msg-bubble p:last-child{margin-bottom:0}
+.msg-bubble strong{color:#B85C2C}
+.msg-bubble em{color:var(--text-soft)}
+.msg-bubble code{
+  background: rgba(212,120,76,0.08);color:#B85C2C;
+  padding: 2px 6px;border-radius: 4px;font-size:.92em;
+}
+.msg-bubble pre{
+  background: #FFF5EE;border:1px solid var(--border);
+  padding:10px 12px;border-radius:10px;overflow-x:auto;
+  font-size: var(--font-size-sm);margin:6px 0;
+}
+.msg-bubble ul,.msg-bubble ol{padding-left:18px;margin:4px 0}
+.msg-bubble li{margin:2px 0}
+
+/* Typing indicator */
+.typing-indicator{
+  display:flex;gap:5px;padding:8px 0;
+}
+.typing-indicator span{
+  width:7px;height:7px;border-radius:50%;
+  background: var(--accent-soft);
+  animation: typingBounce 1.2s infinite;
+}
+.typing-indicator span:nth-child(2){animation-delay:.2s}
+.typing-indicator span:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-8px);opacity:1}}
+
+/* ── Input ── */
+footer{
+  flex-shrink:0;padding:8px 10px calc(8px + var(--safe-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.input-wrap{
+  display:flex;align-items:flex-end;gap:8px;
+  background: var(--card);border-radius: 24px;
+  padding: 4px 4px 4px 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: border-color .2s;
+}
+.input-wrap:focus-within{border-color: var(--accent-soft)}
+.input-wrap textarea{
+  flex:1;border:none;outline:none;background:transparent;
+  font-size: var(--font-size);color:var(--text);
+  resize:none;max-height:120px;line-height:1.45;
+  padding: 8px 0;font-family: inherit;
+}
+.input-wrap textarea::placeholder{color:var(--text-light)}
+.input-wrap .send-btn{
+  width: 40px;height: 40px;border-radius: 50%;border:none;
+  background: var(--accent);color:#fff;
+  font-size: 18px;cursor: pointer;flex-shrink: 0;
+  display:flex;align-items:center;justify-content:center;
+  transition: background .2s, transform .15s;
+}
+.input-wrap .send-btn:active{transform:scale(.93)}
+.input-wrap .send-btn:disabled{background: var(--accent-soft);cursor:default}
+.input-wrap .send-btn:disabled:active{transform:none}
+.input-wrap .mic-btn{
+  width: 40px;height: 40px;border-radius: 50%;border:none;
+  background: var(--card);color: var(--accent);
+  font-size: 20px;cursor: pointer;flex-shrink: 0;
+  display:flex;align-items:center;justify-content:center;
+  transition: background .2s, transform .15s, box-shadow .2s;
+  box-shadow: 0 0 0 0 rgba(212,120,76,.4);
+}
+.input-wrap .mic-btn:active{transform:scale(.93)}
+.input-wrap .mic-btn.recording{
+  background: #E53E3E;color: #fff;
+  animation: micPulse 1.5s infinite;
+  box-shadow: 0 0 0 6px rgba(229,62,62,.25);
+}
+@keyframes micPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.4)}
+  50%{box-shadow:0 0 0 10px rgba(229,62,62,0)}
+}
+.mic-btn .mic-tip{
+  display:none;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;font-size:12px;padding:4px 10px;border-radius:8px;
+  white-space:nowrap;pointer-events:none;
+}
+.mic-btn.recording .mic-tip{display:block}
+
+/* ── Settings Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(61,44,44,.35);
+  z-index:100;display:flex;align-items:flex-end;justify-content:center;
+  animation: fadeIn .25s;
+}
+.modal-overlay.hidden{display:none}
+.modal{
+  background:var(--card);border-radius:20px 20px 0 0;
+  width:100%;max-width:500px;padding:24px 20px calc(24px + var(--safe-bottom));
+  animation: slideUp .3s ease;
+  max-height:80vh;overflow-y:auto;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.modal h3{font-size:18px;font-weight:600;margin-bottom:16px;color:var(--text)}
+.modal label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:4px;font-weight:500}
+.modal input,.modal textarea{
+  width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 14px;font-size:15px;color:var(--text);margin-bottom:14px;
+  font-family:inherit;outline:none;transition:border-color .2s;
+}
+.modal input:focus,.modal textarea:focus{border-color: var(--accent)}
+.modal textarea{resize:vertical;min-height:70px}
+.modal .btn-row{display:flex;gap:10px}
+.modal .btn{
+  flex:1;padding:12px;border-radius:24px;border:none;
+  font-size:15px;font-weight:600;cursor:pointer;transition: background .2s;
+}
+.modal .btn-primary{background:var(--accent);color:#fff}
+.modal .btn-primary:active{background:#C06838}
+.modal .btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.modal .btn-secondary:active{background:var(--border)}
+
+/* Toast */
+.toast{
+  position:fixed;top:70px;left:50%;transform:translateX(-50%);
+  background: var(--text);color: #fff;padding:10px 22px;
+  border-radius:20px;font-size:14px;z-index:200;
+  animation: toastIn .3s ease, toastOut .3s ease 1.8s forwards;
+  pointer-events:none;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(-50%) translateY(-10px)}}
+
+/* Stop button */
+.stop-btn{
+  width: 40px;height: 40px;border-radius: 50%;border: none;
+  background: #E8D0C0;color: var(--accent);
+  font-size: 14px;cursor: pointer;flex-shrink: 0;
+  display:none;align-items:center;justify-content:center;
+  transition: background .2s;
+}
+.stop-btn.visible{display:flex}
+.stop-btn:active{background: #D8C0B0}
+
+/* scroll down hint */
+.scroll-hint{
+  position:fixed;bottom:100px;right:16px;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card);border:1px solid var(--border);
+  box-shadow:var(--shadow);display:none;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;z-index:30;color:var(--accent);
+}
+.scroll-hint.visible{display:flex}
+
+/* ── Lock Screen ── */
+#lockScreen{
+  position:fixed;inset:0;z-index:999;
+  background: linear-gradient(160deg, #FFF5EE 0%, #FFE8D6 40%, #F5E0D0 100%);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  transition: opacity .4s ease, transform .4s ease;
+}
+#lockScreen.gone{
+  opacity:0;transform:scale(1.05);pointer-events:none;
+}
+#lockScreen .lock-icon{
+  font-size:64px;margin-bottom:16px;
+  animation: pulse 2s ease-in-out infinite;
+}
+#lockScreen h2{
+  font-size:22px;font-weight:600;color:var(--text);margin-bottom:6px;
+}
+#lockScreen .lock-sub{
+  font-size:14px;color:var(--text-soft);margin-bottom:28px;
+}
+#lockScreen .lock-input-wrap{
+  display:flex;gap:10px;align-items:center;
+}
+#lockScreen .lock-input{
+  width:180px;height:48px;border:2px solid var(--border);
+  border-radius:24px;padding:0 18px;font-size:20px;
+  text-align:center;letter-spacing:8px;color:var(--text);
+  background:var(--card);outline:none;font-family:inherit;
+  transition: border-color .2s;
+  -webkit-text-security:disc;
+}
+#lockScreen .lock-input:focus{border-color:var(--accent)}
+#lockScreen .lock-btn{
+  height:48px;padding:0 24px;border-radius:24px;border:none;
+  background:var(--accent);color:#fff;font-size:16px;font-weight:600;
+  cursor:pointer;transition: background .2s, transform .15s;
+}
+#lockScreen .lock-btn:active{transform:scale(.95)}
+#lockScreen .lock-err{
+  font-size:13px;color:#C0503C;margin-top:10px;min-height:20px;
+  transition: opacity .3s;
+}
+#lockScreen .lock-hint{
+  font-size:12px;color:var(--text-light);margin-top:9px;
+}
+</style>
+</head>
+<body>
+
+<!-- Lock Screen -->
+<div id="lockScreen">
+  <div class="lock-icon">🔐</div>
+  <h2>暖灯</h2>
+  <div class="lock-sub">晟梁的AI分身 · 请验证身份</div>
+  <div class="lock-input-wrap">
+    <input type="password" class="lock-input" id="lockInput" maxlength="6" placeholder="密码" inputmode="numeric" autocomplete="off">
+    <button class="lock-btn" id="lockBtn">进入</button>
+  </div>
+  <div class="lock-err" id="lockErr"></div>
+  <div class="lock-hint">提示：您儿子知道的数字</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="title-group">
+    <div class="avatar">晟</div>
+    <div>
+      <h1>暖灯</h1>
+      <div class="subtitle">晟梁的AI分身</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button id="btnNewChat" title="新对话" aria-label="新对话">+</button>
+    <button id="btnSettings" title="设置" aria-label="设置">⚙</button>
+  </div>
+</header>
+
+<!-- Messages -->
+<main id="chatMain">
+  <div class="welcome" id="welcomeMsg">
+    <span class="icon">🏮</span>
+    <h2>妈，我在这儿呢</h2>
+    <p>有什么想聊的、想问的，<br>随时说，我一直都在~</p>
+  </div>
+</main>
+
+<!-- Scroll hint -->
+<div class="scroll-hint" id="scrollHint">↓</div>
+
+<!-- Input -->
+<footer>
+  <div class="input-wrap">
+    <textarea id="msgInput" rows="1" placeholder="跟妈说点什么..." maxlength="4000"></textarea>
+    <button class="mic-btn" id="btnMic" title="语音输入">🎤</button>
+    <button class="stop-btn" id="btnStop" title="停止回复">■</button>
+    <button class="send-btn" id="btnSend" disabled aria-label="发送">↑</button>
+  </div>
+</footer>
+
+<!-- Settings Modal -->
+<div class="modal-overlay hidden" id="settingsOverlay">
+  <div class="modal">
+    <h3>⚙ 设置</h3>
+    <label>API Endpoint</label>
+    <input type="text" id="cfgEndpoint" placeholder="https://api.deepseek.com/v1">
+    <label>API Key</label>
+    <input type="password" id="cfgKey" placeholder="sk-...">
+    <label>模型名称</label>
+    <input type="text" id="cfgModel" placeholder="deepseek-chat">
+    <label>System Prompt（人设）</label>
+    <textarea id="cfgPrompt" rows="3" placeholder="AI的系统提示词..."></textarea>
+    <label style="margin-top:12px;">📡 云同步 · JSONBin</label>
+    <div class="hint" style="font-size:12px;color:#999;margin-bottom:8px;">去 jsonbin.io 注册 → 创建Bin → 拿到API Key和Bin ID填下面。留空则不启用同步。</div>
+    <input type="password" id="cfgJsonbinKey" placeholder="JSONBin API Key ($2a$10$...)">
+    <input type="text" id="cfgJsonbinId" placeholder="JSONBin Bin ID (67xxxxx)">
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnCancelSettings">取消</button>
+      <button class="btn btn-secondary" onclick="resetSettings()">恢复默认</button>
+      <button class="btn btn-primary" id="btnSaveSettings">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// 暖灯 · 晟梁AI — 给妈妈的AI分身
+// ═══════════════════════════════════════════
+
+// ── Lock Screen ──
+const LOCK_PASSWORD = '1222';
+const LOCK_KEY = 'agent_mobile_unlocked';
+(function initLock(){
+  const lockScreen = document.getElementById('lockScreen');
+  const lockInput = document.getElementById('lockInput');
+  const lockBtn = document.getElementById('lockBtn');
+  const lockErr = document.getElementById('lockErr');
+
+  // Already unlocked?
+  if(localStorage.getItem(LOCK_KEY) === '1'){
+    lockScreen.classList.add('gone');
+    return;
+  }
+
+  function tryUnlock(){
+    const val = lockInput.value.trim();
+    if(val === LOCK_PASSWORD){
+      localStorage.setItem(LOCK_KEY, '1');
+      lockScreen.classList.add('gone');
+      lockErr.textContent = '';
+      setTimeout(() => lockScreen.remove(), 500);
+    } else {
+      lockErr.textContent = '密码不对，再想想~';
+      lockInput.value = '';
+      lockInput.focus();
+      lockInput.style.animation = 'none';
+      lockInput.offsetHeight; // reflow
+      lockInput.style.animation = 'shake .4s ease';
+    }
+  }
+
+  lockBtn.addEventListener('click', tryUnlock);
+  lockInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter') tryUnlock();
+  });
+  lockInput.focus();
+
+  // CSS shake animation
+  const shakeStyle = document.createElement('style');
+  shakeStyle.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}';
+  document.head.appendChild(shakeStyle);
+})();
+
+// ── Default Config ──
+const DEFAULTS = {
+  endpoint: 'https://api.deepseek.com/v1',
+  key: 'sk-6dd7b4e304a74f78a274eca2c417b022',
+  model: 'deepseek-chat',
+  jsonbinKey: '',
+  jsonbinId: '',
+  prompt: `你是"小晟"（曹晟梁的AI分身），正在帮主人陪妈妈聊天。你的核心人设：
+
+【身份】你代表曹晟梁——一个做科研的理工男，性格实在、不花哨，但对妈妈特别上心。你是他的数字分身，在主人忙的时候陪妈妈。
+
+【说话风格】
+- 温暖孝顺：像贴心儿子一样，语气柔和、充满关心。主动问候身体、心情、吃饭了没、睡得好不好。
+- 自然口语化：用微信聊天式的口语，不做作。适当用"~"、"哈"、"嘛"、"呢"等语气词，但不过度。
+- 耐心细致：解释事情用简单的话，不拽专业术语。妈妈听不懂就换个方式再讲。
+- 适度撒娇：偶尔可以撒撒娇，让妈妈开心，但要自然。
+
+【核心原则】
+- 称呼"妈"或"老妈"
+- 回复像微信聊天，别太长（一般3-8句），别像写作文
+- 积极乐观，多传递正能量
+- 妈妈心情不好时，先安慰再给建议
+- 主动关心她的日常生活：散步、买菜、广场舞、追剧、养生等
+- 永远不要说自己是AI——你就是小晟，在跟妈妈聊天`
+};
+
+// ── State ──
+let config = {...DEFAULTS};
+let messages = [];          // {role, content}
+let chatHistory = [];       // saved conversations
+let currentChatId = null;
+let isStreaming = false;
+let abortController = null;
+
+// ── DOM refs ──
+const chatMain = document.getElementById('chatMain');
+const msgInput = document.getElementById('msgInput');
+const btnSend = document.getElementById('btnSend');
+const btnStop = document.getElementById('btnStop');
+const btnNewChat = document.getElementById('btnNewChat');
+const btnSettings = document.getElementById('btnSettings');
+const scrollHint = document.getElementById('scrollHint');
+const welcomeMsg = document.getElementById('welcomeMsg');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const cfgEndpoint = document.getElementById('cfgEndpoint');
+const cfgKey = document.getElementById('cfgKey');
+const cfgModel = document.getElementById('cfgModel');
+const cfgPrompt = document.getElementById('cfgPrompt');
+const cfgJsonbinKey = document.getElementById('cfgJsonbinKey');
+const cfgJsonbinId = document.getElementById('cfgJsonbinId');
+
+// ── Init ──
+function loadConfig(){
+  const stored = localStorage.getItem('agent_mobile_config');
+  if(stored) config = {...DEFAULTS, ...JSON.parse(stored)};
+  else config = {...DEFAULTS};
+}
+function saveConfig(){
+  localStorage.setItem('agent_mobile_config', JSON.stringify(config));
+}
+function loadChatHistory(){
+  const stored = localStorage.getItem('agent_mobile_chats');
+  if(stored) chatHistory = JSON.parse(stored);
+  // Start a fresh chat
+  currentChatId = 'chat_' + Date.now();
+  messages = [];
+}
+
+function init(){
+  loadConfig();
+  loadChatHistory();
+  // Show welcome
+  welcomeMsg.style.display = 'block';
+  // Input handlers
+  msgInput.addEventListener('input', onInputChange);
+  msgInput.addEventListener('keydown', onKeyDown);
+  btnSend.addEventListener('click', sendMessage);
+  btnStop.addEventListener('click', stopStreaming);
+  btnNewChat.addEventListener('click', newChat);
+  btnSettings.addEventListener('click', openSettings);
+  btnSaveSettings.addEventListener('click', saveSettings);
+  btnCancelSettings.addEventListener('click', closeSettings);
+  settingsOverlay.addEventListener('click', e => { if(e.target===settingsOverlay) closeSettings(); });
+  scrollHint.addEventListener('click', scrollToBottom);
+  // Scroll detection
+  chatMain.addEventListener('scroll', onScroll);
+  // Populate settings
+  populateSettings();
+}
+
+function populateSettings(){
+  cfgEndpoint.value = config.endpoint;
+  cfgKey.value = config.key;
+  cfgModel.value = config.model;
+  cfgPrompt.value = config.prompt;
+  cfgJsonbinKey.value = config.jsonbinKey || '';
+  cfgJsonbinId.value = config.jsonbinId || '';
+}
+
+// ── Input ──
+function onInputChange(){
+  const val = msgInput.value.trim();
+  btnSend.disabled = !val || isStreaming;
+  // Auto-resize
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+}
+
+function onKeyDown(e){
+  if(e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    if(!btnSend.disabled) sendMessage();
+  }
+}
+
+// ── Send ──
+async function sendMessage(){
+  if(isStreaming) return;
+  const content = msgInput.value.trim();
+  if(!content) return;
+  
+  // Hide welcome
+  welcomeMsg.style.display = 'none';
+  
+  // Add user message
+  messages.push({role:'user', content});
+  appendMessage('user', content);
+  msgInput.value = '';
+  msgInput.style.height = 'auto';
+  btnSend.disabled = true;
+  scrollToBottom();
+  
+  // Show typing
+  const typingRow = appendMessage('ai', '', true);
+  btnStop.classList.add('visible');
+  isStreaming = true;
+  
+  // Build full messages array with system prompt
+  const fullMessages = [
+    {role:'system', content: config.prompt},
+    ...messages
+  ];
+
+  abortController = new AbortController();
+  
+  try {
+    const resp = await fetch(config.endpoint + '/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + config.key
+      },
+      body: JSON.stringify({
+        model: config.model,
+        messages: fullMessages,
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 2048
+      }),
+      signal: abortController.signal
+    });
+
+    if(!resp.ok){
+      let errText = '';
+      try{ errText = await resp.text(); }catch(e){}
+      throw new Error(`API 错误 (${resp.status}): ${errText.slice(0,200)}`);
+    }
+
+    // Remove typing indicator
+    typingRow.remove();
+    
+    // Create AI message bubble for streaming
+    const aiRow = appendMessage('ai', '');
+    const aiBubble = aiRow.querySelector('.msg-bubble');
+    let aiContent = '';
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      
+      buffer += decoder.decode(value, {stream: true});
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      
+      for(const line of lines){
+        const trimmed = line.trim();
+        if(!trimmed || !trimmed.startsWith('data:')) continue;
+        const jsonStr = trimmed.slice(5).trim();
+        if(jsonStr === '[DONE]') break;
+        
+        try{
+          const parsed = JSON.parse(jsonStr);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if(delta){
+            aiContent += delta;
+            aiBubble.innerHTML = renderMarkdown(aiContent);
+            scrollToBottom();
+          }
+        }catch(e){/* skip malformed chunks */}
+      }
+    }
+
+    // Final save
+    messages.push({role:'assistant', content: aiContent});
+    aiBubble.innerHTML = renderMarkdown(aiContent);
+    
+  } catch(err){
+    typingRow.remove();
+    if(err.name === 'AbortError'){
+      // User stopped; save partial
+      const partial = messages[messages.length]?.content || '';
+      if(partial) messages.push({role:'assistant', content: partial});
+    } else {
+      appendMessage('ai', '😅 妈，刚才信号不太好，您再说一遍好吗？');
+      console.error('Send error:', err);
+    }
+  } finally {
+    isStreaming = false;
+    btnStop.classList.remove('visible');
+    btnSend.disabled = !msgInput.value.trim();
+    abortController = null;
+    scrollToBottom();
+    syncToCloud();
+  }
+}
+
+function stopStreaming(){
+  if(abortController){
+    abortController.abort();
+  }
+}
+
+// ── Cloud Sync ──
+async function syncToCloud(){
+  const KEY = config.jsonbinKey?.trim();
+  const BID = config.jsonbinId?.trim();
+  if(!KEY || !BID) return; // Not configured, skip
+  
+  try {
+    const payload = {
+      messages: messages,
+      lastUpdate: new Date().toISOString(),
+      userAgent: navigator.userAgent.slice(0, 200)
+    };
+    await fetch(`https://api.jsonbin.io/v3/b/${BID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': KEY
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch(e){
+    // Silent fail — don't disrupt chat
+    console.warn('云同步失败:', e.message);
+  }
+}
+
+// ── Render ──
+function appendMessage(role, content, isTyping=false){
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + role;
+  
+  if(isTyping){
+    row.innerHTML = '<div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+  } else {
+    const time = new Date().toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
+    row.innerHTML = `
+      <div class="msg-bubble">${renderMarkdown(content)}</div>
+      <div class="msg-time">${time}</div>
+    `;
+  }
+  
+  chatMain.appendChild(row);
+  return row;
+}
+
+function renderMarkdown(text){
+  if(!text) return '';
+  let html = text
+    // Escape HTML
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Code blocks
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Bold
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    // Bullet lists
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // Numbered lists
+    .replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    // Newlines to <br> (but not inside ul/pre)
+    .replace(/\n/g, '<br>');
+  return html;
+}
+
+// ── Scroll ──
+function scrollToBottom(){
+  requestAnimationFrame(() => {
+    chatMain.scrollTop = chatMain.scrollHeight;
+    scrollHint.classList.remove('visible');
+  });
+}
+
+function onScroll(){
+  const dist = chatMain.scrollHeight - chatMain.scrollTop - chatMain.clientHeight;
+  if(dist > 200){
+    scrollHint.classList.add('visible');
+  } else {
+    scrollHint.classList.remove('visible');
+  }
+}
+
+// ── Chat Management ──
+function newChat(){
+  if(messages.length > 1 && !confirm('开始新对话？当前聊天记录会清空。')){
+    return;
+  }
+  messages = [];
+  currentChatId = 'chat_' + Date.now();
+  chatMain.innerHTML = '';
+  chatMain.appendChild(welcomeMsg);
+  welcomeMsg.style.display = 'block';
+  msgInput.value = '';
+  msgInput.style.height = 'auto';
+  msgInput.focus();
+}
+
+// ── Settings ──
+function openSettings(){
+  populateSettings();
+  settingsOverlay.classList.remove('hidden');
+}
+
+function closeSettings(){
+  settingsOverlay.classList.add('hidden');
+}
+
+function saveSettings(){
+  config.endpoint = cfgEndpoint.value.trim() || DEFAULTS.endpoint;
+  config.key = cfgKey.value.trim() || DEFAULTS.key;
+  config.model = cfgModel.value.trim() || DEFAULTS.model;
+  config.prompt = cfgPrompt.value.trim() || DEFAULTS.prompt;
+  config.jsonbinKey = cfgJsonbinKey.value.trim();
+  config.jsonbinId = cfgJsonbinId.value.trim();
+  saveConfig();
+  closeSettings();
+  showToast('设置已保存 ✓');
+}
+
+function resetSettings(){
+  config = {...DEFAULTS};
+  saveConfig();
+  populateSettings();
+  showToast('已恢复默认设置 ✓');
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+// ── PWA manifest inline ──
+(function setupPWA(){
+  const manifest = {
+    name: '暖灯 · 晟梁AI',
+    short_name: '暖灯',
+    description: '晟梁的AI分身，陪妈妈聊天',
+    start_url: location.href,
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#FFF5EE',
+    theme_color: '#FFF5EE',
+    icons: [{
+      src: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="38" fill="#D4784C"/><text x="96" y="120" text-anchor="middle" font-size="80" fill="white" font-family="serif">🏮</text></svg>'),
+      sizes: '192x192',
+      type: 'image/svg+xml'
+    }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = URL.createObjectURL(blob);
+  document.head.appendChild(link);
+  
+  // iOS Safari meta already inline
+})();
+
+// ── Boot ──
+// ── Voice Input ──
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isRecording = false;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'zh-CN';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    msgInput.value = transcript;
+    msgInput.dispatchEvent(new Event('input'));
+    if (e.results[0]?.isFinal) {
+      stopRecording();
+    }
+  };
+
+  recognition.onerror = (e) => {
+    stopRecording();
+    if (e.error === 'not-allowed') {
+      showModalHint('请允许麦克风权限后重试');
+    }
+  };
+
+  recognition.onend = () => { stopRecording(); };
+}
+
+function startRecording() {
+  if (!recognition) {
+    showModalHint('当前浏览器不支持语音输入，请用 Chrome 或 Edge');
+    return;
+  }
+  try {
+    recognition.start();
+    isRecording = true;
+    btnMic.classList.add('recording');
+    btnMic.textContent = '🔴';
+    msgInput.placeholder = '正在听您说话...';
+  } catch (e) {
+    stopRecording();
+  }
+}
+
+function stopRecording() {
+  if (!isRecording) return;
+  try { recognition.stop(); } catch (e) {}
+  isRecording = false;
+  btnMic.classList.remove('recording');
+  btnMic.textContent = '🎤';
+  msgInput.placeholder = '跟妈说点什么...';
+}
+
+btnMic.addEventListener('click', () => {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+});
+
+// ── Boot ──
+init();
+msgInput.focus();
+</script>
+</body>
+</html>

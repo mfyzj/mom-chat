@@ -1,0 +1,39 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>暖灯·聊天查看器</title>
+<style>:root{--bg:#faf7f2;--card:#fff;--text:#3d3226;--muted:#8c7b6b;--accent:#c17a3e;--border:#e8dccf}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}.container{max-width:900px;margin:0 auto;padding:24px}.header{text-align:center;padding:40px 0 24px}.header h1{font-size:28px}.header p{color:var(--muted);margin-top:6px}.bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:24px}.bar label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}.bar input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);min-width:180px}.bar button{padding:8px 20px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}.st{font-size:12px;padding:4px 10px;border-radius:20px}.st.ok{background:#e8f5e9;color:#27ae60}.st.err{background:#fdecea;color:#c0392b}.st.idle{background:#f5f0ea;color:var(--muted)}.feed{display:flex;flex-direction:column;gap:16px}.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px}.card.user{border-left:4px solid var(--accent);background:#f0e6d8}.card.assistant{border-left:4px solid #6b9e85}.card .role{font-size:11px;font-weight:700;margin-bottom:6px}.card.user .role{color:var(--accent)}.card.assistant .role{color:#6b9e85}.card .time{font-size:11px;color:var(--muted);float:right}.card .body{font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word}.empty{text-align:center;padding:60px 20px;color:var(--muted)}.footer{text-align:center;padding:40px;color:var(--muted);font-size:12px}</style></head>
+<body><div class="container">
+<div class="header"><h1>暖灯 · 聊天记录</h1><p>实时查看妈妈的对话</p></div>
+<div class="bar">
+<label>API Key<br><input type="password" id="k" placeholder="$2a$10$..."></label>
+<label>Bin ID<br><input type="text" id="b" placeholder="67xxxxxxxx"></label>
+<button id="btn">拉取</button>
+<label style="margin-left:auto;flex-direction:row;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="ar"> 自动刷新 15s</label>
+<span class="st idle" id="st">就绪</span>
+</div>
+<div class="feed" id="feed"></div>
+<div class="empty" id="empty"><div style="font-size:48px;margin-bottom:12px">没记录</div><p>填 Key + Bin ID 后点击拉取</p></div>
+</div><div class="footer">暖灯 · 晟梁AI</div>
+<script>
+const $=id=>document.getElementById(id),k=$('k'),b=$('b'),feed=$('feed'),empty=$('empty'),st=$('st'),btn=$('btn'),ar=$('ar');
+(()=>{let s=JSON.parse(localStorage.getItem('vc')||'{}');if(s.key)k.value=s.key;if(s.id)b.value=s.id})();
+function sc(){localStorage.setItem('vc',JSON.stringify({key:k.value,id:b.value}))}
+function ss(c,t){st.className='st '+c;st.textContent=t}
+function md(t){return t?t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>'):''}
+async function f(){
+let K=k.value.trim(),B=b.value.trim();
+if(!K||!B){ss('err','请填 Key 和 Bin ID');return}
+sc();ss('idle','拉取中...');btn.disabled=true;
+try{
+let r=await fetch('https://api.jsonbin.io/v3/b/'+B,{headers:{'X-Master-Key':K}});
+if(!r.ok)throw Error('HTTP '+r.status);
+let d=await r.json(),ms=d.record?.messages||[];
+if(!ms.length){feed.innerHTML='';empty.style.display='block';ss('ok','暂无');return}
+empty.style.display='none';
+feed.innerHTML=ms.map((m,i)=>'<div class="card '+m.role+'"><span class="time">'+(m.time||'#'+(i+1))+'</span><div class="role">'+(m.role==='user'?'妈妈':'晟梁AI')+'</div><div class="body">'+md(m.content)+'</div></div>').join('');
+ss('ok',ms.length+' 条');
+}catch(e){ss('err',e.message)}finally{btn.disabled=false}
+}
+btn.onclick=f;
+let t=null;
+ar.onchange=()=>{if(ar.checked){t=setInterval(f,15000);ss('ok','自动刷新中')}else{clearInterval(t);t=null;ss('idle','就绪')}};
+if(k.value&&b.value)f();
+</script></body></html>
