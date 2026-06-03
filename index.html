@@ -11,7 +11,7 @@
 <link rel="manifest" href="/mom-chat/manifest.json">
 <script>
 (function(){
-  var cur='v8';
+  var cur='v9';
   if(localStorage.getItem('_sw_v')!==cur){
     localStorage.setItem('_sw_v',cur);
     if('serviceWorker' in navigator){
@@ -398,13 +398,13 @@ footer{
 <!-- Settings Modal -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
-    <h3>⚙ 设置 <span style="font-size:12px;color:var(--text-light);font-weight:400">v8</span></h3>
+    <h3>⚙ 设置 <span style="font-size:12px;color:var(--text-light);font-weight:400">v9</span></h3>
     <label>API Endpoint</label>
     <input type="text" id="cfgEndpoint" placeholder="https://api.deepseek.com/v1">
     <label>API Key</label>
     <input type="password" id="cfgKey" placeholder="sk-...">
     <label>模型名称</label>
-    <input type="text" id="cfgModel" placeholder="deepseek-chat">
+    <input type="text" id="cfgModel" placeholder="deepseek-reasoner">
     <label style="display:none">System Prompt（人设）</label>
     <textarea id="cfgPrompt" rows="3" placeholder="AI的系统提示词..." style="display:none"></textarea>
     <label style="margin-top:12px;">📡 云同步 · JSONBin</label>
@@ -424,7 +424,7 @@ footer{
 // 暖灯 · 晟梁AI — 给妈妈的AI分身
 // ═══════════════════════════════════════════
 
-const APP_VERSION = 'v8'; // bump to force localStorage + SW refresh
+const APP_VERSION = 'v9'; // bump to force localStorage + SW refresh
 
 // ── Lock Screen ──
 const LOCK_PASSWORD = '1222';
@@ -474,7 +474,7 @@ const LOCK_KEY = 'agent_mobile_unlocked';
 const DEFAULTS = {
   endpoint: 'https://api.deepseek.com/v1',
   key: 'sk-6dd7b4e304a74f78a274eca2c417b022',
-  model: 'deepseek-chat',
+  model: 'deepseek-reasoner',
   jsonbinKey: '',
   jsonbinId: '',
   prompt: `你是曹晟梁，在跟娜娜微信聊天。语气自然不做作，但要对娜娜暖一点。
@@ -635,7 +635,6 @@ async function sendMessage(){
         model: config.model,
         messages: fullMessages,
         stream: true,
-        temperature: 0.7,
         max_tokens: 2048
       }),
       signal: abortController.signal
