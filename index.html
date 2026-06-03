@@ -11,7 +11,7 @@
 <link rel="manifest" href="/mom-chat/manifest.json">
 <script>
 (function(){
-  var cur='v6';
+  var cur='v7';
   if(localStorage.getItem('_sw_v')!==cur){
     localStorage.setItem('_sw_v',cur);
     if('serviceWorker' in navigator){
@@ -25,10 +25,10 @@
   }
 })();
 </script>
-<style><title>暖灯 · 晟梁AI</title>
+<title>暖灯 · 晟梁AI</title>
 <style>
 :root {
-  --bg: #FFF5EE;
+  --bg: #FFE8D6;
   --card: #FFFFFF;
   --user-bubble: #FFE8D6;
   --ai-bubble: #FFFFFF;
@@ -398,7 +398,7 @@ footer{
 <!-- Settings Modal -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
-    <h3>⚙ 设置 <span style="font-size:12px;color:var(--text-light);font-weight:400">v6</span></h3>
+    <h3>⚙ 设置 <span style="font-size:12px;color:var(--text-light);font-weight:400">v7</span></h3>
     <label>API Endpoint</label>
     <input type="text" id="cfgEndpoint" placeholder="https://api.deepseek.com/v1">
     <label>API Key</label>
@@ -424,7 +424,7 @@ footer{
 // 暖灯 · 晟梁AI — 给妈妈的AI分身
 // ═══════════════════════════════════════════
 
-const APP_VERSION = 'v6'; // bump to force localStorage + SW refresh
+const APP_VERSION = 'v7'; // bump to force localStorage + SW refresh
 
 // ── Lock Screen ──
 const LOCK_PASSWORD = '1222';
