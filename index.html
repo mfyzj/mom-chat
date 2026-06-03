@@ -474,7 +474,7 @@ const LOCK_KEY = 'agent_mobile_unlocked';
 const DEFAULTS = {
   endpoint: 'https://api.deepseek.com/v1',
   key: 'sk-6dd7b4e304a74f78a274eca2c417b022',
-  model: 'deepseek-reasoner',
+  model: 'deepseek-v4-pro',
   jsonbinKey: '',
   jsonbinId: '',
   prompt: `你是曹晟梁，在跟娜娜微信聊天。语气自然不做作，但要对娜娜暖一点。
@@ -490,6 +490,14 @@ const DEFAULTS = {
 - 主动问问她：吃饭了没、在哪呢、今天累不累、下雨带伞了没
 - 她分享日常你就接两句，别只回"知道了"
 - 关键事情认真回，比如帮她查东西、提醒她吃药、告诉她你在哪
+
+【实时信息原则——非常重要！】
+- 如果系统消息里附带了天气数据（以"【北京实时天气"开头），你必须基于这些真实数据回答天气问题，不要自己编
+- 聊天气时自然地引用数据里的具体温度、天气状况，用你自己的语气说
+- 如果娜娜问了天气但你系统消息里没有天气数据，就正常回答（不需要假装有数据）
+- 如果娜娜问了新闻/股票/菜价等其他需要联网才能知道的事情，温柔地说：
+  "这个我还不太清楚呢，回头问问晟梁～" 或 "这个晟梁还没教会我，你直接问他呗😊"
+  不要瞎编！
 
 【原则】
 - 你不是AI，你就是曹晟梁
@@ -616,9 +624,16 @@ async function sendMessage(){
   btnStop.classList.add('visible');
   isStreaming = true;
   
+  // Inject real-time weather data if user is asking about weather
+  let systemPrompt = config.prompt;
+  if(hasWeatherIntent(content)){
+    const weatherData = await fetchWeather();
+    if(weatherData) systemPrompt += '\n\n' + weatherData;
+  }
+
   // Build full messages array with system prompt
   const fullMessages = [
-    {role:'system', content: config.prompt},
+    {role:'system', content: systemPrompt},
     ...messages
   ];
 
@@ -707,6 +722,53 @@ async function sendMessage(){
     syncToCloud();
   }
 }
+
+// ── Weather API (Open-Meteo, free, no key needed) ──
+const WEATHER_KW = '天气|下雨|温度|多少度|冷|热|带伞|刮风|风大|雾霾|空气|晴天|阴天|降温|升温|冻|凉快|闷热|潮湿|干燥|紫外线|防晒|pm2|雾|雷阵雨|暴雨|大风|高温|低温|穿什么|下雪|冰雹|沙尘';
+
+function hasWeatherIntent(text){
+  return new RegExp(WEATHER_KW).test(text);
+}
+
+const WMO = {
+  0:'晴天☀️',1:'晴间多云🌤',2:'多云⛅',3:'阴天☁️',
+  45:'有雾🌫',48:'有雾🌫',
+  51:'小雨🌦',53:'小雨🌦',55:'小雨🌦',
+  61:'雨🌧',63:'雨🌧',65:'大雨🌧',
+  71:'小雪❄️',73:'中雪❄️',75:'大雪❄️',
+  80:'阵雨🌦',81:'阵雨🌦',82:'大阵雨🌦',
+  95:'雷暴⛈',96:'冰雹🌨',99:'冰雹🌨'
+};
+
+async function fetchWeather(){
+  try{
+    const [wResp,aResp]=await Promise.all([
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,precipitation,uv_index&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max&timezone=Asia/Shanghai&forecast_days=3'),
+      fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=39.9042&longitude=116.4074&current=pm2_5,pm10,european_aqi')
+    ]);
+    const w=await wResp.json(), a=await aResp.json();
+    const c=w.current, d=w.daily, aq=a.current;
+    let r='【北京实时天气】\n';
+    r+=`天气：${WMO[c.weather_code]||c.weather_code} | 温度：${c.temperature_2m}°C | 湿度：${c.relative_humidity_2m}%\n`;
+    r+=`风速：${c.wind_speed_10m} km/h | 紫外线：${c.uv_index||0}级\n`;
+    if(aq&&aq.pm2_5!=null){
+      const p=aq.pm2_5.toFixed(0);
+      r+=`PM2.5：${p}µg/m³`;
+      r+=p<=50?' 空气好':p<=100?' 还行':' 稍差';
+      r+='\n';
+    }
+    r+='未来三天：';
+    for(let i=0;i<3;i++){
+      r+=`${['今','明','后'][i]} ${WMO[d.weather_code[i]]||d.weather_code[i]} ${d.temperature_2m_min[i]}~${d.temperature_2m_max[i]}°C`;
+      if(d.precipitation_probability_max[i])r+=` 降水${d.precipitation_probability_max[i]}%`;
+      if(i<2)r+=' | ';
+    }
+    return r;
+  }catch(e){console.error('天气获取失败',e);return null;}
+}
+
+// Originally at line 711: function stopStreaming()
+// Keep all existing code below unchanged
 
 function stopStreaming(){
   if(abortController){
